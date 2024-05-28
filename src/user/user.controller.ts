@@ -6,15 +6,17 @@ import {
   Param,
   Patch,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { UserDto } from './dtos/user.dto';
+import { CreateUserDto } from './dtos/create-user.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
 
 @Controller('users')
 export class UserController {
   @Post()
-  async create(@Body() body: UserDto) {
+  async create(@Body() { name }: CreateUserDto) {
     return {
-      message: `User ${body.name} created!`,
+      message: `User ${name} created!`,
     };
   }
 
@@ -24,14 +26,17 @@ export class UserController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', ParseIntPipe) id: number) {
     return {
       user: id,
     };
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() body: UserDto) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateUserDto,
+  ) {
     return {
       user: id,
       ...body,
@@ -39,9 +44,9 @@ export class UserController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id', ParseIntPipe) id: number) {
     return {
-      message: `User ${id} deleted!`,
+      id,
     };
   }
 }
