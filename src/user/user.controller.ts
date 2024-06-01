@@ -4,15 +4,14 @@ import {
   Controller,
   Post,
   Get,
-  Param,
   Patch,
   Delete,
-  ParseIntPipe,
   UseInterceptors,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { LogInterceptor } from 'src/interceptors/log.interceptor';
+import { ParamId } from 'src/decorators/param-id.decorator';
 
 @Controller('users')
 export class UserController {
@@ -30,21 +29,18 @@ export class UserController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@ParamId() id: number) {
     return this.userService.findOne(id);
   }
 
   @Patch(':id')
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: UpdateUserDto,
-  ) {
+  async update(@ParamId() id: number, @Body() body: UpdateUserDto) {
     return this.userService.update(id, body);
   }
 
   @UseInterceptors(LogInterceptor)
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@ParamId() id: number) {
     return this.userService.remove(id);
   }
 }

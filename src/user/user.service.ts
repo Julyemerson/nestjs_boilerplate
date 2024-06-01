@@ -1,5 +1,9 @@
 import { PrismaService } from './../prisma/prisma.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 
@@ -13,7 +17,7 @@ export class UserService {
         data,
       });
     } catch (error) {
-      console.log(error.message);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -21,11 +25,13 @@ export class UserService {
     try {
       return this.prisma.user.findMany();
     } catch (error) {
-      console.log(error.message);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   async findOne(id: number) {
+    await this.userExists(id);
+
     try {
       return this.prisma.user.findUnique({
         where: {
@@ -33,7 +39,7 @@ export class UserService {
         },
       });
     } catch (error) {
-      console.log(error.message);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -41,6 +47,8 @@ export class UserService {
     id: number,
     { name, email, password, role, birthAt }: UpdateUserDto,
   ) {
+    await this.userExists(id);
+
     const data: any = {};
 
     if (birthAt) {
@@ -64,7 +72,6 @@ export class UserService {
     }
 
     try {
-      await this.userExists(id);
       return this.prisma.user.update({
         where: {
           id,
@@ -72,29 +79,29 @@ export class UserService {
         data,
       });
     } catch (error) {
-      throw new NotFoundException(` User with ID ${id} not found`);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   async remove(id: number) {
+    await this.userExists(id);
     try {
-      await this.userExists(id);
       return this.prisma.user.delete({
         where: {
           id,
         },
       });
     } catch (error) {
-      throw new NotFoundException(` User with ID ${id} not found`);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   async userExists(id: number) {
-    if (
-      (await this.prisma.user.count({
-        where: { id },
-      })) === null
-    ) {
+    const user = await this.prisma.user.count({
+      where: { id },
+    });
+
+    if (!user) {
       throw new NotFoundException(` User with ID ${id} not found`);
     }
   }
