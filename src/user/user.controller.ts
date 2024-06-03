@@ -6,18 +6,22 @@ import {
   Get,
   Patch,
   Delete,
-  UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
-import { LogInterceptor } from 'src/interceptors/log.interceptor';
 import { ParamId } from 'src/decorators/param-id.decorator';
+import { Roles } from 'src/decorators/role.decorator';
+import { Role } from 'src/enums/role.enum';
+import { RoleGuard } from 'src/guards/role.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
 
+@Roles(Role.ADMIN)
+@UseGuards(AuthGuard, RoleGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseInterceptors(LogInterceptor)
   @Post()
   async create(@Body() data: CreateUserDto) {
     return this.userService.create(data);
@@ -27,7 +31,6 @@ export class UserController {
   async findAll() {
     return this.userService.list();
   }
-
   @Get(':id')
   async findOne(@ParamId() id: number) {
     return this.userService.findOne(id);
@@ -38,7 +41,7 @@ export class UserController {
     return this.userService.update(id, body);
   }
 
-  @UseInterceptors(LogInterceptor)
+  @Roles(Role.ADMIN)
   @Delete(':id')
   async remove(@ParamId() id: number) {
     return this.userService.remove(id);

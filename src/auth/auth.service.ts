@@ -4,6 +4,7 @@ import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthRegisterDto } from './dto/auth.register.dto';
 import { UserService } from 'src/user/user.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -47,6 +48,7 @@ export class AuthService {
   isValidToken(token: string) {
     try {
       this.checkToken(token);
+
       return true;
     } catch (error) {
       return false;
@@ -57,11 +59,14 @@ export class AuthService {
     const user = await this.prismaService.user.findFirst({
       where: {
         email,
-        password,
       },
     });
 
     if (!user) {
+      throw new UnauthorizedException('Email ou senha Incorreta');
+    }
+
+    if (!(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Email ou senha Incorreta');
     }
 

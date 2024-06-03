@@ -6,12 +6,17 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateUserDto) {
+    // generate a salt and hash the password before saving it
+    // bcrypt.genSalt() generates a random salt
+    data.password = await bcrypt.hash(data.password, await bcrypt.genSalt());
+
     try {
       return this.prisma.user.create({
         data,
@@ -64,7 +69,7 @@ export class UserService {
     }
 
     if (password) {
-      data.password = password;
+      data.password = await bcrypt.hash(password, await bcrypt.genSalt());
     }
 
     if (role) {
@@ -85,6 +90,7 @@ export class UserService {
 
   async remove(id: number) {
     await this.userExists(id);
+
     try {
       return this.prisma.user.delete({
         where: {
